@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RealEstateSamtredia</title>
+    <meta name="color-scheme" content="light dark">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <link rel="icon" type="image/png" href="Images/logo.png">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="overlay" id="overlay"></div>
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="fas fa-building"></i>
+                <span class="logo-text">RealEstate<br>Samtredia</span>
+            </div>
+            <nav>
+                <ul>
+                    <li class="sidebar-close" id="sidebarClose"><i class="fas fa-times"></i></li>
+                    <li id="navDashboard"><i class="fas fa-th-large"></i> Dashboard</li>
+                    <li id="navProperties" class="active"><i class="fas fa-home"></i> Properties</li>
+                    <li id="navFavorites"><i class="fas fa-heart"></i> Favorites <span class="favorites-badge" id="favoritesBadge">0</span></li>
+                    <li id="navAnalytics"><i class="fas fa-chart-line"></i> Analytics</li>
+                    <li id="navMessages"><i class="fas fa-envelope"></i> Messages</li>
+                    <li id="navFinancial"><i class="fas fa-wallet"></i> Financial</li>
+                    <li id="navHelp"><i class="fas fa-question-circle"></i> Help & Support</li>
+                    <li id="themeToggle"><i class="fas fa-moon"></i> Dark Mode</li>
+                </ul>
+                
+                <div class="currency-selector">
+                    <label>Currency</label>
+                    <select id="currencySelect">
+                        <option value="USD">USD ($)</option>
+                        <option value="EUR">EUR (€)</option>
+                        <option value="GEL">GEL (₾)</option>
+                    </select>
+                </div>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header>
+                <button class="burger-menu" id="burgerMenu"><i class="fas fa-bars"></i></button>
+                <div class="search-wrapper">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="Search properties...">
+                </div>
+                <div class="header-right">
+                    <button class="add-btn" id="addPropertyBtn"><i class="fas fa-plus"></i> Add Property</button>
+                    
+                    <div class="notification-wrapper">
+                        <button class="notification-btn" id="notifyBtn">
+                            <i class="fas fa-bell"></i>
+                        </button>
+                        <div class="notification-dropdown" id="notifyDropdown">
+                            <div class="notify-header">
+                                <h4>Notifications</h4>
+                                <span class="mark-read">Mark all read</span>
+                            </div>
+                            <div class="notify-list">
+                                <p class="no-notifs">No new notifications</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="signin-btn" id="headerSignInBtn">Sign In</button>
+                    <div class="profile-pic" id="profileBtn" style="display: none;">
+                        <div class="avatar-initials" id="headerProfileInitials">AD</div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="filter-bar">
+                <div class="filter-group">
+                    <button class="filter active" data-filter="all">All</button>
+                    <button class="filter" data-filter="sale">For Sale</button>
+                    <button class="filter" data-filter="rent">For Rent</button>
+                </div>
+                <select id="sortSelect" class="sort-dropdown">
+                    <option value="default">Sort By</option>
+                    <option value="price-asc">Price: Low to High</option>
+                    <option value="sqft-desc">Size: Sqft (High to Low)</option>
+                </select>
+                <div class="view-toggles">
+                    <button id="gridViewBtn" class="view-btn active" title="Grid View"><i class="fas fa-th-large"></i></button>
+                    <button id="mapViewBtn" class="view-btn" title="Map View"><i class="fas fa-map-marked-alt"></i></button>
+                </div>
+            </div>
+
+            <section class="property-grid" id="propertyGrid">
+                </section>
+            <div id="pagination" class="pagination-container"></div>
+            
+            <div id="dashboardView" class="dashboard-view hidden">
+                <div class="dashboard-header-simple">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <i class="fas fa-building" style="color: var(--primary); font-size: 1.6rem;"></i>
+                        <span style="font-size: 1.5rem; font-weight: 800; background: linear-gradient(135deg, var(--primary) 0%, var(--text-main) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">RealEstateSamtredia</span>
+                    </div>
+                    <h2>Overview</h2>
+                </div>
+
+                <div id="dashboardEmptyState" class="empty-state">
+                    <div class="empty-icon"><i class="fas fa-home"></i></div>
+                    <h3>No Properties Listed</h3>
+                    <p>Upload your first property to unlock your dashboard insights.</p>
+                    <button class="add-btn-primary" onclick="document.getElementById('addPropertyBtn').click()">Add Your First Property</button>
+                </div>
+                
+                <div id="dashboardContent" class="hidden">
+                    <div class="simple-stats-container">
+                        <div class="simple-stat-box">
+                            <span class="stat-label">Total Properties</span>
+                            <h3 id="statTotalProps">0</h3>
+                        </div>
+                        <div class="simple-stat-box">
+                            <span class="stat-label">Portfolio Value</span>
+                            <h3 id="statTotalValue">$0</h3>
+                        </div>
+                        <div class="simple-stat-box">
+                            <span class="stat-label">Active Rentals</span>
+                            <h3 id="statRentals">0</h3>
+                        </div>
+                    </div>
+                    <h3 class="section-title">Your Listings</h3>
+                    <div id="dashboardGrid" class="property-grid"></div>
+                </div>
+            </div>
+
+            <div id="mapView" class="map-view"></div>
+            <div id="analyticsView" class="analytics-view hidden">
+                <h2>Property Distribution</h2>
+                <div class="chart-container"><canvas id="propertyChart"></canvas></div>
+            </div>
+
+            <div id="financialView" class="financial-view hidden">
+                <h2>Financial Overview</h2>
+                
+                <div id="financialEmptyState" class="empty-state hidden">
+                    <div class="empty-icon" style="color: #0fa968;"><i class="fas fa-chart-pie"></i></div>
+                    <h3>Your Financial Journey Starts Here</h3>
+                    <p>Upload your first property to see real-time analytics, estimated earnings, and market insights.</p>
+                    <button class="add-btn-primary" onclick="document.getElementById('addPropertyBtn').click()" style="background: #0fa968; color: white;">Add Property</button>
+                </div>
+
+                <div id="financialContent" class="hidden">
+                    <div class="fin-metrics-grid">
+                        <div class="fin-card fin-card-glass">
+                            <div class="fin-card-header">
+                                <span>Estimated Portfolio Value</span>
+                                <i class="fas fa-vault" style="color: #0fa968;"></i>
+                            </div>
+                            <div class="fin-amount" id="finTotalValue">$0</div>
+                            <div class="fin-subtext">Total asset worth</div>
+                        </div>
+
+                        <div class="fin-card fin-card-glass">
+                            <div class="fin-card-header">
+                                <span>Potential Monthly Income</span>
+                                <i class="fas fa-coins" style="color: #0fa968;"></i>
+                            </div>
+                            <div class="fin-amount" id="finMonthlyIncome">$0</div>
+                            <div class="fin-subtext">From active rentals</div>
+                        </div>
+
+                        <div class="fin-card fin-card-glass">
+                            <div class="fin-card-header">
+                                <span>Active Listings</span>
+                                <i class="fas fa-tags" style="color: #0fa968;"></i>
+                            </div>
+                            <div class="fin-amount" id="finActiveCount">0</div>
+                            <div class="fin-subtext">Properties on market</div>
+                        </div>
+                    </div>
+
+                    <div class="fin-chart-section">
+                        <h3>Income Overview</h3>
+                        <div class="chart-wrapper"><canvas id="revenueChart"></canvas></div>
+                    </div>
+
+                    <div class="fin-transactions">
+                        <h3>Portfolio Performance & Commission Est.</h3>
+                        <div class="table-responsive">
+                            <table class="fin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Property</th>
+                                        <th>Type</th>
+                                        <th>Market Status</th>
+                                        <th>Value / Price</th>
+                                        <th>Net Potential (Est.)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="financialTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="messagesView" class="messages-view hidden">
+                <div class="messages-header">
+                    <h2>Inquiries & Messages</h2>
+                    <button id="clearMessagesBtn" class="clear-messages-btn"><i class="fas fa-trash-alt"></i> Clear History</button>
+                </div>
+                <div class="messages-list" id="messagesList"></div>
+            </div>
+
+            <div id="favoritesView" class="favorites-view hidden">
+                <h2>My Favorites</h2>
+                <div id="favoritesGrid" class="property-grid"></div>
+                <div id="favoritesEmptyState" class="empty-state hidden">
+                    <div class="empty-icon" style="color: #ef4444;"><i class="far fa-heart"></i></div>
+                    <h3>No Favorites Yet</h3>
+                    <p>Save properties you like to view them here later.</p>
+                    <button class="add-btn-primary" onclick="document.getElementById('navProperties').click()">Browse Properties</button>
+                </div>
+            </div>
+
+            <div id="helpView" class="help-view hidden">
+                <h2>Help & Support</h2>
+                <div class="help-container">
+                    <div class="faq-section">
+                        <h3>Frequently Asked Questions</h3>
+                        <div class="faq-item">
+                            <h4>How do I contact an agent?</h4>
+                            <p>Click the "Contact Agent" button on any property details page to send a direct message.</p>
+                        </div>
+                        <div class="faq-item">
+                            <h4>How do I add a property?</h4>
+                            <p>Click the "Add Property" button in the top right corner and fill out the form.</p>
+                        </div>
+                        <div class="faq-item">
+                            <h4>Is my data secure?</h4>
+                            <p>Yes, we use local storage for your convenience and do not share data with third parties.</p>
+                        </div>
+                    </div>
+                    <div class="contact-form-section">
+                        <h3>Contact Support</h3>
+                        <form id="contactForm" onsubmit="event.preventDefault(); submitContactForm();">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>Name</label>
+                                    <input type="text" placeholder="Your first name" name="firstName" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Surname</label>
+                                    <input type="text" placeholder="Your last name" name="lastName" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>E-Mail</label>
+                                    <input type="email" placeholder="your@email.com" name="email" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Phone Number</label>
+                                    <input type="tel" placeholder="+995 5XX XXX XXX" name="phone" required>
+                                </div>
+                            </div>
+                            <div class="form-group full-width">
+                                <label>Issue Description</label>
+                                <textarea placeholder="Please describe your issue in detail..." rows="6" name="issue" required></textarea>
+                            </div>
+                            <button type="submit" class="submit-prop-btn">Send Message</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <footer class="main-footer">
+                <p>&copy; 2026 RealEstate Samtredia. All Rights Reserved.</p>
+            </footer>
+        </main>
+
+        <div id="propertyModal" class="modal">
+            <div class="modal-content">
+                <span class="close-modal">&times;</span>
+                <img src="" alt="" class="modal-image" id="modalImage">
+                <div class="modal-header">
+                    <div class="modal-title">
+                        <h2 id="modalTitle"></h2>
+                        <p class="location" id="modalLocation"></p>
+                    </div>
+                    <div class="modal-price" id="modalPrice"></div>
+                </div>
+                <div class="modal-details">
+                    <div class="modal-detail-item">
+                        <i class="fas fa-bed"></i>
+                        <p id="modalBeds"></p>
+                    </div>
+                    <div class="modal-detail-item">
+                        <i class="fas fa-bath"></i>
+                        <p id="modalBaths"></p>
+                    </div>
+                    <div class="modal-detail-item">
+                        <i class="fas fa-ruler-combined"></i>
+                        <p id="modalSqft"></p>
+                    </div>
+                </div>
+                <p class="modal-description" id="modalDescription"></p>
+                
+                <div class="mortgage-calculator">
+                    <h3><i class="fas fa-calculator"></i> Smart Mortgage Estimator</h3>
+                    <div class="calc-grid">
+                        <div class="calc-group">
+                            <label>Down Payment</label>
+                            <input type="number" id="calcDownPayment" min="0">
+                        </div>
+                        <div class="calc-group">
+                            <label>Interest Rate</label>
+                            <input type="number" id="calcInterest" value="3.5" step="0.1" min="1">
+                        </div>
+                        <div class="calc-group">
+                            <label>Loan Term</label>
+                            <input type="number" id="calcTerm" value="30" min="1">
+                        </div>
+                    </div>
+                    <div class="calc-result">
+                        <div class="result-label">Estimated Monthly Payment</div>
+                        <div class="result-amount" id="calcMonthlyPayment">$0.00</div>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button id="shareBtn" class="share-btn"><i class="fas fa-share-alt"></i> Share</button>
+                    <button id="contactAgentBtn" class="contact-btn"><i class="fas fa-envelope"></i> Contact Agent</button>
+                    <button id="modalDeleteBtn" class="contact-btn" style="background: #ef4444; color: white; display: none;"><i class="fas fa-trash"></i> Delete</button>
+                </div>
+
+                <div class="similar-section">
+                    <h3>Similar Properties</h3>
+                    <div class="similar-grid" id="similarGrid"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="compareWidget" class="compare-widget">
+            <div class="compare-info">
+                <i class="fas fa-balance-scale"></i>
+                <span>Compare (<span id="compareCount">0</span>/3)</span>
+            </div>
+            <button id="openCompareBtn" class="compare-action-btn">Compare Now</button>
+        </div>
+
+        <div id="compareModal" class="modal">
+            <div class="modal-content compare-content">
+                <span class="close-modal close-compare">&times;</span>
+                <h2>Compare Properties</h2>
+                <div class="compare-grid" id="compareGrid"></div>
+            </div>
+        </div>
+
+        <div id="profileModal" class="modal">
+            <div class="modal-content profile-content">
+                <span class="close-modal close-profile">&times;</span>
+                <h2>User Profile</h2>
+                <div class="profile-form">
+                    <div class="profile-avatar-edit">
+                        <img src="https://ui-avatars.com/api/?name=Alex+Doe&background=0fa968&color=fff" id="profileModalImg" alt="Profile">
+                        <button class="change-avatar-btn">Change Photo</button>
+                        <input type="file" id="profilePhotoInput" accept="image/*" style="display: none;">
+                    </div>
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="profileName" placeholder="Full Name">
+                    </div>
+                    <div class="form-group">
+                        <label>Email Address</label>
+                        <input type="email" id="profileEmail" placeholder="Email Address">
+                    </div>
+                    <button id="saveProfileBtn" class="save-btn">Save Changes</button>
+                    <button id="logoutBtn" class="logout-btn">Log Out</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="addPropertyModal" class="modal">
+            <div class="modal-content add-property-content">
+                <span class="close-modal close-add-prop">&times;</span>
+                <h2>Add New Property</h2>
+                <form id="addPropertyForm">
+                    <div class="form-grid">
+                        <div class="form-group full-width upload-section">
+                            <label>Property Image</label>
+                            <div class="image-upload-box" id="imageUploadBox">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <p>Click or Drag to Upload Image</p>
+                                <input type="file" id="propImage" accept="image/*" class="file-input-hidden">
+                                <img id="imagePreview" class="image-preview hidden">
+                            </div>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label><i class="fas fa-heading"></i> Property Title</label>
+                            <input type="text" id="propTitle" required placeholder="e.g. Luxury Penthouse with City View">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-map-marker-alt"></i> Location</label>
+                            <input type="text" id="propLocation" required placeholder="e.g. Tbilisi, Georgia">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-dollar-sign"></i> Price</label>
+                            <input type="number" id="propPrice" required placeholder="Enter amount">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-tag"></i> Type</label>
+                            <select id="propType">
+                                <option value="sale">For Sale</option>
+                                <option value="rent">For Rent</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-list"></i> Category</label>
+                            <select id="propCategory">
+                                <option value="Residential">Residential</option>
+                                <option value="Luxury">Luxury</option>
+                                <option value="Commercial">Commercial</option>
+                                <option value="Flat">Flat</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label><i class="fas fa-bed"></i> Beds</label>
+                            <input type="number" id="propBeds" min="0" placeholder="Number of bedrooms">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-bath"></i> Baths</label>
+                            <input type="number" id="propBaths" min="0" placeholder="Number of bathrooms">
+                        </div>
+                        <div class="form-group size-group">
+                            <label><i class="fas fa-ruler-combined"></i> Property Size</label>
+                            <div class="size-input-wrapper">
+                                <input type="number" id="propSize" min="0" placeholder="Enter size">
+                                <select id="propUnit">
+                                    <option value="sqft">Sq Ft</option>
+                                    <option value="m2">m²</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group full-width">
+                            <label><i class="fas fa-align-left"></i> Description</label>
+                            <textarea id="propDescription" rows="4" placeholder="Describe the property..."></textarea>
+                        </div>
+                    </div>
+                    <button type="submit" class="submit-prop-btn">Add Property</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="authModal" class="modal">
+            <div class="modal-content auth-content">
+                <span class="close-modal close-auth">&times;</span>
+                <div class="auth-tabs">
+                    <button class="auth-tab active" data-tab="login">Sign In</button>
+                    <button class="auth-tab" data-tab="register">Register</button>
+                </div>
+                <div class="social-login">
+                    <button class="social-btn google" id="googleLoginBtn">
+                        <svg width="18" height="18" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/><path fill="none" d="M0 0h48v48H0z"/></svg>
+                        Continue with Google
+                    </button>
+                </div>
+                <div class="auth-divider"><span>or continue with email</span></div>
+                <div id="loginForm" class="auth-form active">
+                    <div class="form-group"><label>Email</label><input type="email" id="loginEmail" placeholder="Enter email"></div>
+                    <div class="form-group"><label>Password</label><input type="password" id="loginPassword" placeholder="Enter password"></div>
+                    <div class="form-actions"><a href="#" id="forgotPasswordLink" class="forgot-password-link">Forgot Password?</a></div>
+                    <button class="auth-btn" id="loginSubmitBtn">Sign In</button>
+                </div>
+                <div id="registerForm" class="auth-form">
+                    <div class="form-group"><label>Full Name</label><input type="text" id="regName" placeholder="Full Name"></div>
+                    <div class="form-group"><label>Email</label><input type="email" id="regEmail" placeholder="Enter email"></div>
+                    <div class="form-group"><label>Password</label><input type="password" id="regPassword" placeholder="Create password"></div>
+                    <button class="auth-btn" id="regSubmitBtn">Create Account</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="forgotPasswordModal" class="modal">
+            <div class="modal-content auth-content">
+                <span class="close-modal close-forgot">&times;</span>
+                <h2>Reset Password</h2>
+                <p class="modal-description">Enter your email address and we'll send you a link to reset your password.</p>
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" id="forgotEmail" placeholder="Enter your email">
+                </div>
+                <button class="auth-btn" id="sendRecoveryBtn">Send Recovery Link</button>
+            </div>
+        </div>
+
+        <div id="deleteModal" class="modal">
+            <div class="modal-content delete-content">
+                <div class="delete-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                <h2>Delete Property?</h2>
+                <p>Are you sure you want to remove this listing? This action cannot be undone.</p>
+                <div class="modal-actions">
+                    <button id="cancelDeleteBtn" class="cancel-btn">Cancel</button>
+                    <button id="confirmDeleteBtn" class="confirm-delete-btn">Delete</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="clearMessagesModal" class="modal">
+            <div class="modal-content delete-content">
+                <div class="delete-icon"><i class="fas fa-trash-alt"></i></div>
+                <h2>Clear History?</h2>
+                <p>Are you sure you want to clear all messages? This action cannot be undone.</p>
+                <div class="modal-actions">
+                    <button id="cancelClearMessagesBtn" class="cancel-btn">Cancel</button>
+                    <button id="confirmClearMessagesBtn" class="confirm-delete-btn">Clear</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="customAlertModal" class="modal">
+            <div class="modal-content alert-content">
+                <div class="alert-icon" id="alertIcon"></div>
+                <h2 id="alertTitle">Notification</h2>
+                <p id="alertMessage">Message goes here.</p>
+                <button class="auth-btn" id="alertCloseBtn">Okay</button>
+            </div>
+        </div>
+
+        <div id="loadingModal" class="modal">
+            <div class="modal-content loading-content">
+                <div class="spinner"></div>
+                <h3>Sending Message...</h3>
+            </div>
+        </div>
+
+        <div id="successModal" class="modal">
+            <div class="modal-content success-content">
+                <div class="success-icon"><i class="fas fa-check-circle"></i></div>
+                <h2>Successfully Registered!</h2>
+                <p>Welcome to RealEstate Samtredia. Your account has been created.</p>
+                <button class="auth-btn" id="successCloseBtn">Continue</button>
+            </div>
+        </div>
+    </div>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="script.js"></script>
+</body>
+</html>
