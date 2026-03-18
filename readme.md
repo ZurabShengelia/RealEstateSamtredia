@@ -1,5 +1,5 @@
 🏠 RealEstateSamtredia 
-A modern and functional Real Estate Management Dashboard with integrated contact features.
+A modern and functional Real Estate Management Dashboard with integrated contact features
 
 ✨ Key Features
 Property Grid: Dynamic listings with smart unit logic ($ vs ₾, sq ft vs m²).
